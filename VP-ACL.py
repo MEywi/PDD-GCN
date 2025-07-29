@@ -1,11 +1,28 @@
 import torch.nn as nn
 import torch.nn.functional as F
-from layers.attention import Attention, NoQueryAttention
+from torch_geometric.data import Data
+from torch_geometric.nn import GCNConv
 from layers.squeeze_embedding import SqueezeEmbedding
 from layers.point_wise_feed_forward import PositionwiseFeedForward
 from transformers import AutoModel, AutoTokenizer,AutoConfig
 import math
 from item import pgd_attack_with_cross_entropy
+class GCN(torch.nn.Module):
+    def __init__(self, num_features, num_classes):
+        super(GCN, self).__init__()
+        self.conv1 = GCNConv(num_features, 32)  
+        self.conv2 = GCNConv(32, num_classes)   
+    def forward(self, data):
+        x, edge_index = data.x, data.edge_index
+ 
+                x = self.conv1(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, training=self.training)
+        
+               x = self.conv2(x, edge_index)
+        
+        return F.log_softmax(x, dim=1)
+
 class TripletLoss(torch.nn.Module):
     def __init__(self, margin):
         super(TripletLoss, self).__init__()
@@ -35,9 +52,9 @@ class LayerNorm(nn.Module):
         return self.a_2 * (x - mean) / (std + self.eps) + self.b_2
 
 
-class VP_ACL(nn.Module):
+class PDD-GCN(nn.Module):
     def __init__(self, bert, tokenizer, opt):
-        super(VP_ACL, self).__init__()
+        super(PDD-GCN, self).__init__()
         self.opt = opt
         self.bert = bert
         self.squeeze_embedding_False = SqueezeEmbedding(batch_first=False)
